@@ -1,8 +1,11 @@
 ?start: relation | expr
 
 ?relation: expr "=" expr  -> eq
-        | expr "<" expr  -> lt
-        | expr ">" expr  -> gt
+         | expr "<" expr  -> lt
+         | expr ">" expr  -> gt
+         | expr "\\leq" expr -> leq
+         | expr "\\geq" expr -> geq
+         | expr "\\neq" expr -> neq
 
 ?expr: term
       | expr "+" term   -> add
@@ -30,72 +33,183 @@
      | fraction
      | integral
      | limit
+     | summation
+     | product
      | matrix
      | vector
+     | piecewise
+     | floor
+     | ceiling
+     | binomial
+     | dot_notation
+     | nabla_op
      | infinity
      | "(" expr ")"
-     | "|" expr "|"    -> absolute
+     | "\\left(" expr "\\right)"  -> parens
+     | "|" expr "|"               -> absolute
+     | "\\left|" expr "\\right|"  -> absolute
 
-// Fractions
+
+// ================================================================
+// FRACTIONS
+// ================================================================
 fraction: "\\frac" "{" expr "}" "{" expr "}"
+        | "\\cfrac" "{" expr "}" "{" expr "}"
 
-// Derivatives
+
+// ================================================================
+// DERIVATIVES (ordinary)
+// ================================================================
 derivative: "\\frac" "{" "d" order? "}" "{" DIFFERENTIAL order? "}" (parens_expr | factor)?
           | "\\frac" "{" "d" order? expr "}" "{" DIFFERENTIAL order? "}"
 
+
+// ================================================================
+// PARTIAL DERIVATIVES
+// ================================================================
 partial_derivative: "\\frac" "{" "\\partial" order? "}" "{" "\\partial" SYMBOL order? "}" (parens_expr | factor)?
                   | "\\frac" "{" "\\partial" order? expr "}" "{" "\\partial" SYMBOL order? "}"
+                  | "\\frac" "{" "\\partial^2" "}" "{" "\\partial" SYMBOL "\\partial" SYMBOL "}" (parens_expr | factor)? -> mixed_partial
+                  | "\\frac" "{" "\\partial^2" expr "}" "{" "\\partial" SYMBOL "\\partial" SYMBOL "}"  -> mixed_partial
 
-?order: "^" atom
 
-?parens_expr: "(" expr ")"
-
-// Integrals
+// ================================================================
+// INTEGRALS
+// ================================================================
 integral: "\\int" limits? expr DIFFERENTIAL
+        | "\\iint" limits? expr DIFFERENTIAL DIFFERENTIAL  -> double_integral
+        | "\\oint" limits? expr DIFFERENTIAL               -> contour_integral
 
 limits: "_" atom "^" atom
+      | "_{" expr "}^{" expr "}"
       | "_" atom
       | "^" atom
 
-// Limits
-limit: "\\lim" "_{" SYMBOL "\\to" expr "}" expr
+?order: "^" atom
+?parens_expr: "(" expr ")"
 
-// Functions
+
+// ================================================================
+// LIMITS
+// ================================================================
+limit: "\\lim" "_{" SYMBOL "\\to" expr "}" expr
+     | "\\lim" "_{" SYMBOL "\\to" expr "^" SIDE "}" expr -> onesided_limit
+
+SIDE: "+" | "-"
+
+
+// ================================================================
+// SUMMATIONS & PRODUCTS
+// ================================================================
+summation: "\\sum" "_" "{" SYMBOL "=" expr "}" "^" "{" expr "}" expr
+         | "\\sum" "_{" SYMBOL "=" expr "}^{" expr "}" expr
+         | "\\sum" "_" "{" SYMBOL "=" expr "}" "^" atom expr
+
+product: "\\prod" "_" "{" SYMBOL "=" expr "}" "^" "{" expr "}" expr
+       | "\\prod" "_{" SYMBOL "=" expr "}^{" expr "}" expr
+
+
+// ================================================================
+// FUNCTIONS
+// ================================================================
 function: FUNC_NAME "(" expr ")"
         | FUNC_NAME "{" expr "}"
         | FUNC_NAME expr
 
-// Matrix
+
+// ================================================================
+// MATRICES
+// ================================================================
 matrix: "\\begin{bmatrix}" matrix_rows "\\end{bmatrix}"
       | "\\begin{pmatrix}" matrix_rows "\\end{pmatrix}"
+      | "\\begin{vmatrix}" matrix_rows "\\end{vmatrix}"
+      | "\\begin{Bmatrix}" matrix_rows "\\end{Bmatrix}"
+      | "\\begin{matrix}" matrix_rows "\\end{matrix}"
 
 matrix_rows: matrix_row ("\\\\" matrix_row)*
 matrix_row: expr ("&" expr)*
 
-// Vector
+
+// ================================================================
+// VECTORS
+// ================================================================
 vector: "\\vec" "{" SYMBOL "}"
       | "\\mathbf" "{" SYMBOL "}"
+      | "\\boldsymbol" "{" SYMBOL "}"
 
-// Greek letters
+
+// ================================================================
+// DOT NOTATION (Time derivatives)
+// ================================================================
+dot_notation: "\\dot" "{" SYMBOL "}"   -> dot_deriv
+            | "\\ddot" "{" SYMBOL "}"  -> ddot_deriv
+
+
+// ================================================================
+// NABLA OPERATOR
+// ================================================================
+nabla_op: "\\nabla" expr               -> gradient
+        | "\\nabla" "\\cdot" expr      -> divergence
+        | "\\nabla" "\\times" expr     -> curl
+        | "\\nabla^2" expr             -> laplacian
+        | "\\Delta" expr               -> laplacian
+
+
+// ================================================================
+// PIECEWISE FUNCTIONS
+// ================================================================
+piecewise: "\\begin{cases}" case_rows "\\end{cases}"
+case_rows: case_row ("\\\\" case_row)*
+case_row: expr "&" expr
+
+
+// ================================================================
+// SPECIAL FUNCTIONS
+// ================================================================
+floor: "\\lfloor" expr "\\rfloor"
+     | "\\left\\lfloor" expr "\\right\\rfloor"
+
+ceiling: "\\lceil" expr "\\rceil"
+       | "\\left\\lceil" expr "\\right\\rceil"
+
+binomial: "\\binom" "{" expr "}" "{" expr "}"
+
+
+// ================================================================
+// GREEK LETTERS
+// ================================================================
 greek_letter: GREEK_LOWER | GREEK_UPPER
 
-infinity: "\\infty"
+GREEK_LOWER: "\\alpha" | "\\beta" | "\\gamma" | "\\delta" | "\\epsilon" | "\\varepsilon"
+           | "\\zeta" | "\\eta" | "\\theta" | "\\vartheta" | "\\iota" | "\\kappa"
+           | "\\lambda" | "\\mu" | "\\nu" | "\\xi" | "\\pi" | "\\varpi"
+           | "\\rho" | "\\varrho" | "\\sigma" | "\\varsigma" | "\\tau"
+           | "\\upsilon" | "\\phi" | "\\varphi" | "\\chi" | "\\psi" | "\\omega"
 
-GREEK_LOWER: "\\alpha" | "\\beta" | "\\gamma" | "\\delta" | "\\epsilon" 
-           | "\\theta" | "\\lambda" | "\\mu" | "\\pi" | "\\sigma" | "\\phi" | "\\omega"
+GREEK_UPPER: "\\Gamma" | "\\Delta" | "\\Theta" | "\\Lambda" | "\\Xi" | "\\Pi"
+           | "\\Sigma" | "\\Upsilon" | "\\Phi" | "\\Psi" | "\\Omega"
 
-GREEK_UPPER: "\\Gamma" | "\\Delta" | "\\Theta" | "\\Lambda" | "\\Pi" | "\\Sigma" | "\\Phi" | "\\Omega"
 
+// ================================================================
+// FUNCTION NAMES
+// ================================================================
 FUNC_NAME: "\\sin" | "\\cos" | "\\tan" | "\\cot" | "\\sec" | "\\csc"
          | "\\arcsin" | "\\arccos" | "\\arctan"
-         | "\\sinh" | "\\cosh" | "\\tanh"
+         | "\\sinh" | "\\cosh" | "\\tanh" | "\\coth"
          | "\\log" | "\\ln" | "\\exp"
          | "\\sqrt"
+         | "\\abs" | "\\det" | "\\tr"
+
+
+// ================================================================
+// TERMINALS
+// ================================================================
+infinity: "\\infty"
 
 ?atom: NUMBER | SYMBOL | greek_letter | infinity | "(" expr ")"
 
 SYMBOL: /[a-zA-Z]/
-DIFFERENTIAL: "dx" | "dy" | "dz" | "dt"
+DIFFERENTIAL: "dx" | "dy" | "dz" | "dt" | "ds" | "du" | "dv" | "dr" | "d\\theta" | "d\\phi"
 NUMBER: /\d+\.?\d*/
 
 %import common.WS

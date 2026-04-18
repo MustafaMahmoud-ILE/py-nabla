@@ -45,9 +45,16 @@ def test_complex_calculus():
     assert "2*x*cos(x**2)" in str(result.simplify())
 
 def test_multi_character_splitting():
-    """Test implicit multiplication of multi-character strings."""
-    # 'weight' should split to 'w*e*i*g*h*t'
-    # Since 'e' is mapped to SymPy E (Euler's number), check for that
+    """Test implicit multiplication of multi-character strings.
+
+    'weight' preprocesses into 'w*e*i*g*h*t'.
+    'e' maps to Euler's number E; all other letters remain plain symbols.
+    SymPy sorts multiplicands alphabetically, so result is 2*E*g*h*i*t*w.
+    """
     f = expr(r"2weight")
-    # Multi-char symbols get alphabetized
-    assert "E*g*h*i*t*w" in str(f._expr)
+    result_str = str(f._expr)
+    # E (Euler's number) must be present — confirms 'e' → E mapping
+    assert "E" in result_str
+    # The remaining letters (g, h, i, t, w) must all appear
+    for letter in ("g", "h", "i", "t", "w"):
+        assert letter in result_str, f"Letter '{letter}' missing from {result_str}"

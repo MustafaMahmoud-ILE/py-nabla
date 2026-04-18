@@ -1,0 +1,84 @@
+{
+  "basic": [
+    {"input": "x^2", "expected_str": "x**2", "description": "Simple power"},
+    {"input": "x^2 + 1", "expected_str": "x**2 + 1", "description": "Polynomial"},
+    {"input": "\\frac{1}{2}", "expected_float": 0.5, "description": "Fraction"},
+    {"input": "\\sqrt{4}", "expected_float": 2.0, "description": "Square root"},
+    {"input": "\\sin(0)", "expected_float": 0.0, "description": "Trig at zero"},
+    {"input": "\\cos(0)", "expected_float": 1.0, "description": "Cosine at zero"},
+    {"input": "|{-3}|", "expected_float": 3.0, "description": "Absolute value"},
+    {"input": "2 + 3 * 4", "expected_float": 14.0, "description": "Operator precedence"},
+    {"input": "\\infty", "expected_str": "oo", "description": "Infinity symbol"}
+  ],
+  "derivatives": [
+    {"input": "\\frac{d}{dx}(x^2)", "expected_str": "2*x", "description": "Basic derivative"},
+    {"input": "\\frac{d}{dx}(\\sin(x))", "expected_str": "cos(x)", "description": "Trig derivative"},
+    {"input": "\\frac{d}{dx}(e^x)", "expected_str": "exp(x)", "description": "Exponential derivative"},
+    {"input": "\\frac{d}{dx}(\\ln(x))", "expected_str": "1/x", "description": "Log derivative"}
+  ],
+  "partial_derivatives": [
+    {
+      "input": "\\frac{\\partial}{\\partial x}(x^2 + y)",
+      "expected_str": "2*x",
+      "description": "Partial derivative w.r.t. x"
+    }
+  ],
+  "limits": [
+    {
+      "input": "\\lim_{x \\to 0} x^2",
+      "expected_float": 0.0,
+      "description": "Limit at zero"
+    },
+    {
+      "input": "\\lim_{x \\to \\infty} \\frac{1}{x}",
+      "expected_float": 0.0,
+      "description": "Limit at infinity"
+    }
+  ],
+  "integrals": [
+    {
+      "input": "\\int x dx",
+      "expected_str": "x**2/2",
+      "description": "Simple indefinite integral"
+    },
+    {
+      "input": "\\int \\sin(x) dx",
+      "expected_str": "-cos(x)",
+      "description": "Trig integral"
+    }
+  ],
+  "matrices": [
+    {
+      "input": "\\begin{bmatrix} 1 & 2 \\\\ 3 & 4 \\end{bmatrix}",
+      "expected_str": "Matrix([[1, 2], [3, 4]])",
+      "description": "2x2 integer matrix"
+    },
+    {
+      "input": "\\begin{pmatrix} x \\\\ y \\end{pmatrix}",
+      "expected_str": "Matrix([[x], [y]])",
+      "description": "2x1 column vector"
+    }
+  ],
+  "special_functions": [
+    {
+      "input": "\\lfloor 3.7 \\rfloor",
+      "expected_float": 3.0,
+      "description": "Floor function"
+    },
+    {
+      "input": "\\lceil 3.2 \\rceil",
+      "expected_float": 4.0,
+      "description": "Ceiling function"
+    },
+    {
+      "input": "\\binom{5}{2}",
+      "expected_float": 10.0,
+      "description": "Binomial coefficient"
+    }
+  ],
+  "greek_letters": [
+    {"input": "\\alpha + \\beta", "description": "Greek letter sum"},
+    {"input": "\\pi", "expected_float": 3.141592653589793, "description": "Pi constant"},
+    {"input": "\\omega + \\theta", "description": "Angular variables"}
+  ]
+}

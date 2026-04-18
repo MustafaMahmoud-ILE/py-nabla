@@ -26,9 +26,9 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/nabla-math/nabla"
-"Bug Tracker" = "https://github.com/nabla-math/nabla/issues"
-"Repository" = "https://github.com/nabla-math/nabla"
+"Homepage" = "https://github.com/MustafaMahmoud-ILE/py-nabla"
+"Bug Tracker" = "https://github.com/MustafaMahmoud-ILE/py-nabla/issues"
+"Repository" = "https://github.com/MustafaMahmoud-ILE/py-nabla"
 
 [project.optional-dependencies]
 plotting = ["matplotlib>=3.7"]
