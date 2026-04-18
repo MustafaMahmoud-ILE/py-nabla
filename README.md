@@ -1,82 +1,101 @@
-# ∇ Nabla: Mathematics at the speed of thought.
+# ∇ py-nabla: Mathematics in the language of thought.
 
-[![PyPI version](https://img.shields.io/badge/pypi-0.1.0--alpha-blue.svg)](https://pypi.org/project/py_py_nabla/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://github.com/MustafaMahmoud-ILE/Nabla/actions/workflows/python-test.yml/badge.svg)](https://github.com/MustafaMahmoud-ILE/Nabla/actions)
+[![PyPI version](https://img.shields.io/pypi/v/py-nabla.svg)](https://pypi.org/project/py-nabla/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Build Status](https://github.com/MustafaMahmoud-ILE/py-nabla/actions/workflows/python-test.yml/badge.svg)](https://github.com/MustafaMahmoud-ILE/py-nabla/actions)
+[![Documentation](https://img.shields.io/badge/docs-v1.0.0-green.svg)](https://github.com/MustafaMahmoud-ILE/py-nabla#readme)
 
-**Nabla** is a production-grade Python library designed for mathematicians, engineers, and data scientists who want the power of **Mathematica** or **MATLAB** with the modern elegance of Python. By placing **LaTeX** at the core of the developer experience, Nabla eliminates the friction between "math on paper" and "math in code."
+**py-nabla** is a production-grade mathematical computing engine that bridges the gap between **LaTeX notation** and **Python execution**. Write math exactly as you think it; execute it with the power of SymPy and NumPy.
 
 ---
 
-## 🚀 Why Nabla?
+## 🔥 Why py-nabla?
 
-For too long, Python developers have had to manually translate complex LaTeX equations into nested code structures. Every bracket and parenthesis is a potential bug.
+Translating complex LaTeX equations into nested Python code is brittle, time-consuming, and error-prone. One misplaced parenthesis in a symbolic expression can lead to hours of debugging.
 
-**Nabla solves this.** It bridges the gap between SymPy's symbolic manipulation and NumPy's numerical performance using a high-fidelity Earley Parser. Write your equations once in LaTeX, and let Nabla handle the translation, simplification, and vectorization.
+**py-nabla eliminates this friction.**
+
+- **Parse Naturally**: High-fidelity Earley parser for complex LaTeX (vmatrix, cases, summations, mixed partials).
+- **Compute Symbolically**: Full integration with SymPy for calculus, algebra, and simplification.
+- **Execute Numerically**: Instant vectorization via NumPy for high-performance evaluation.
+- **Visualize Beautifully**: Built-in 2D/3D plotting engine with publication-ready aesthetics.
+- **Render Professionally**: Bidirectional LaTeX conversion with support for Leibniz, Prime, and Newton (dot) notations.
+
+---
 
 ## 🛠️ Installation
 
 ```bash
+# Core engine
 pip install py-nabla
+
+# With plotting support (recommended)
+pip install py-nabla[plotting]
+
+# Install all development dependencies
+pip install py-nabla[all]
 ```
 
-*Note: For plotting support, use `pip install py-nabla[plotting]`.*
+---
 
 ## ✨ Quickstart: The "Wow" Moment
 
-Differentiate a complex integral and evaluate it numerically in just three lines of code:
+Differentiate a complex expression, simplify it, and plot it in seconds:
 
 ```python
-from py_nabla import expr
+import py_nabla as nb
+import numpy as np
 
-# 1. Parse your LaTeX naturally
-f = expr(r"\frac{d}{dx} \int_0^x \sin(t^2) dt")
+# 1. Parse your LaTeX
+f = nb.parse(r"\frac{d}{dx} \left( x^2 \sin(x) \right)")
 
-# 2. Get the analytical result (Fundamental Theorem of Calculus)
-print(f"Analytical: {f.simplify()}")  # Result: sin(x^2)
+# 2. Compute analytically
+print(f"Derivative: {f.simplify()}") 
+# Result: 2*x*sin(x) + x**2*cos(x)
 
-# 3. Vectorize and evaluate at 1,000 points instantly
-y_values = f.evaluate(x=[1.0, 1.5, 2.0])
+# 3. Render back to LaTeX (Leibniz style)
+print(f.latex(mode='display'))
+
+# 4. Plot instantly
+nb.plot(f, domain=(-2, 2), title="Differentiated Waveform")
 ```
 
-## 💎 Core Features
+---
 
-### 🧠 Unbreakable Earley Engine
-Unlike naive regex parsers, Nabla uses a robust **Earley Parser** capable of handling mathematical ambiguities. It understands that `2xy` is $2 \cdot x \cdot y$, not a single variable, through an intelligent static symbol table.
+## 💎 Production Features (v1.0.0)
 
-### 🪄 Lazy LaTeX Support
-Don't worry about perfect typesetting. Nabla's preprocessor automatically normalizes "lazy" inputs:
-- `x^12` ⮕ `x^{12}`
-- `\frac12` ⮕ `\frac{1}{2}`
+### 🧠 Advanced Parser
+- **Calculus**: Support for $\int, \iint, \oint$, $\lim_{x \to a}$, $\sum, \prod$, and partial derivatives.
+- **Linear Algebra**: Matrix environments (`bmatrix`, `pmatrix`, `vmatrix`) and vector notations.
+- **Piecewise**: Support for `\begin{cases}` environments.
+- **Ambiguity Resolution**: Intelligent splitting of multi-char symbols (e.g., `2weight` $\to 2 \cdot w \cdot e \cdot i \cdot g \cdot h \cdot t$).
 
-### 🛠️ Industry-Leading DX (Developer Experience)
-Stop guessing where your LaTeX failed. `NablaParseError` provides visual pointers to exactly where the syntax error occurred:
+### 🪄 Publication Rendering
+Beautiful bidirectional conversion with custom styles:
+- **Derivative Styles**: Choose between `leibniz` ($\frac{dy}{dx}$), `prime` ($y'$), or `dot` ($\dot{y}$).
+- **Multiple Modes**: `inline`, `display`, `equation`, or `align`.
 
-```text
-NablaParseError: Unexpected token
-\int_0^\infty e^{-x} d
-                     ^-- Unexpected EOF
-```
+### 📊 Plotting Engine
+- **2D Plots**: Multi-function plotting with automatic labeling.
+- **3D Plots**: Surface, wireframe, and contour plots for multivariable functions.
+- **Parametric**: Plot complex curves like circles, spirals, or Lissajous figures.
 
-### 🔍 Deep Decision Logging
-Curious why `xy` was split? Enable debug logging to see every decision the parser makes:
-```python
-from py_nabla.utils.logger import set_debug_mode
-set_debug_mode(True)
-```
+---
 
-## 📚 Robustness by Design
-Nabla is stress-tested against:
-- **Deep Nesting**: Unlimited levels of fractions, radicals, and powers.
-- **Calculus**: Sophisticated handling of $\frac{d}{dx}$, $\int$, and $\lim$.
-- **Relations**: Support for $=$, $<$, and $>$ symbols.
-- **Performance**: High-speed vectorization via `to_numpy()`.
+## 📚 Documentation & Tutorials
+
+- [Getting Started Guide](docs/tutorial/01_getting_started.md)
+- [Calculus Cookbook](docs/tutorial/02_calculus.md)
+- [Linear Algebra Mastery](docs/tutorial/03_linear_algebra.md)
+- [Advanced Plotting](docs/tutorial/04_plotting.md)
+
+---
 
 ## 🤝 Contributing
 
-We welcome contributions from the mathematical and open-source communities! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. See the [GitHub Repository](https://github.com/MustafaMahmoud-ILE/Nabla) for the latest updates.
+We welcome contributions from the mathematical and open-source communities! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## 📄 License
 
-Nabla is released under the **MIT License**.
+py-nabla is released under the **MIT License**.

@@ -58,9 +58,15 @@ all = ["py-nabla[plotting,dev]"]
 "Repository"    = "https://github.com/MustafaMahmoud-ILE/py-nabla"
 "Documentation" = "https://github.com/MustafaMahmoud-ILE/py-nabla#readme"
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.packages.find]
 where   = ["."]
 include = ["py_nabla*"]
+
+[tool.setuptools.package-data]
+py_nabla = ["parser/*.lark"]
 
 [tool.pytest.ini_options]
 testpaths    = ["tests"]
