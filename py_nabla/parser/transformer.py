@@ -260,22 +260,22 @@ class LaTeXTransformer(Transformer):
     # ================================================================
 
     def vector(self, args):
-        return Symbol(args[0].value)
+        val = args[0].value if hasattr(args[0], 'value') else args[0].name
+        return Symbol(val)
 
     # ================================================================
     # DOT NOTATION (time derivatives)
     # ================================================================
 
     def dot_deriv(self, args):
-        """\\dot{x}  →  Derivative(x(t), t)"""
-        sym = Symbol(args[0].value)
-        t = Symbol('t')
-        # Return as a named symbol with dot notation for now
-        return Symbol(f"{args[0].value}_dot")
+        """\\dot{x}  →  Symbol(x_dot)"""
+        val = args[0].value if hasattr(args[0], 'value') else args[0].name
+        return Symbol(f"{val}_dot")
 
     def ddot_deriv(self, args):
-        """\\ddot{x}  →  second time derivative"""
-        return Symbol(f"{args[0].value}_ddot")
+        """\\ddot{x}  →  Symbol(x_ddot)"""
+        val = args[0].value if hasattr(args[0], 'value') else args[0].name
+        return Symbol(f"{val}_ddot")
 
     # ================================================================
     # NABLA OPERATOR

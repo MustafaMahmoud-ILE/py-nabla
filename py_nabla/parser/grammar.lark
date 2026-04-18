@@ -14,9 +14,12 @@
       | "+" expr
 
 ?term: factor
-      | term "*" factor -> mul
-      | term "/" factor -> div
-      | term factor     -> implicit_mul
+      | term "*" factor      -> mul
+      | term "\\cdot" factor -> mul
+      | term "\\times" factor -> mul
+      | term "/" factor      -> div
+      | term "\\div" factor    -> div
+      | term factor          -> implicit_mul
 
 ?factor: base
        | base "^" atom          -> power
@@ -133,16 +136,16 @@ matrix_row: expr ("&" expr)*
 // ================================================================
 // VECTORS
 // ================================================================
-vector: "\\vec" "{" SYMBOL "}"
-      | "\\mathbf" "{" SYMBOL "}"
-      | "\\boldsymbol" "{" SYMBOL "}"
+vector: "\\vec" "{" (SYMBOL | greek_letter) "}"
+      | "\\mathbf" "{" (SYMBOL | greek_letter | NUMBER) "}"
+      | "\\boldsymbol" "{" (SYMBOL | greek_letter) "}"
 
 
 // ================================================================
 // DOT NOTATION (Time derivatives)
 // ================================================================
-dot_notation: "\\dot" "{" SYMBOL "}"   -> dot_deriv
-            | "\\ddot" "{" SYMBOL "}"  -> ddot_deriv
+dot_notation: "\\dot" "{" (SYMBOL | greek_letter) "}"   -> dot_deriv
+            | "\\ddot" "{" (SYMBOL | greek_letter) "}"  -> ddot_deriv
 
 
 // ================================================================
@@ -160,7 +163,7 @@ nabla_op: "\\nabla" expr               -> gradient
 // ================================================================
 piecewise: "\\begin{cases}" case_rows "\\end{cases}"
 case_rows: case_row ("\\\\" case_row)*
-case_row: expr "&" expr
+case_row: expr "&" (relation | expr)
 
 
 // ================================================================
@@ -209,7 +212,7 @@ infinity: "\\infty"
 ?atom: NUMBER | SYMBOL | greek_letter | infinity | "(" expr ")"
 
 SYMBOL: /[a-zA-Z]/
-DIFFERENTIAL: "dx" | "dy" | "dz" | "dt" | "ds" | "du" | "dv" | "dr" | "d\\theta" | "d\\phi"
+DIFFERENTIAL: "dx" | "dy" | "dz" | "dt" | "ds" | "du" | "dv" | "dr" | "dw" | "d\\theta" | "d\\phi"
 NUMBER: /\d+\.?\d*/
 
 %import common.WS

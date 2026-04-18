@@ -15,7 +15,7 @@ class LaTeXPreprocessor:
         "Gamma", "Delta", "Theta", "Lambda", "Xi", "Pi", "Sigma", "Phi", "Psi", "Omega",
         "sin", "cos", "tan", "cot", "sec", "csc", "arcsin", "arccos", "arctan",
         "sinh", "cosh", "tanh", "log", "ln", "exp", "sqrt", "lim", "to", "partial",
-        "d", "dx", "dy", "dz", "dt"
+        "d", "dx", "dy", "dz", "dt", "ds", "du", "dv", "dr", "dw"
     }
 
     def __init__(self, custom_symbols: Set[str] = None):
@@ -73,10 +73,11 @@ class LaTeXPreprocessor:
         Injects explicit '*' where implicit multiplication is detected.
         Example: 2x -> 2*x, xy -> x*y, 2\sin(x) -> 2*\sin(x)
         """
-        # 1. Protect commands (e.g., \sin)
-        commands = re.findall(r"\\[a-zA-Z]+", text)
+        # 1. Protect commands and environments (e.g., \sin, \begin{cases}, \cdot)
+        # Matches backslash followed by letters, optionally followed by {letters}
+        commands = re.findall(r"\\[a-zA-Z]+(?:\{[a-zA-Z]+\})?", text)
         for i, cmd in enumerate(commands):
-            # Using __i__ which has no letters, so it won't be split
+            # Using ___i___ which has no letters, so it won't be split
             text = text.replace(cmd, f" ___{i}___ ")
             
         # 2. Split character sequences
