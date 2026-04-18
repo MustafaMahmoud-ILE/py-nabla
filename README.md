@@ -2,7 +2,7 @@
 
 [![PyPI version](https://img.shields.io/badge/pypi-0.1.0--alpha-blue.svg)](https://pypi.org/project/nabla/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://github.com/nabla-math/nabla/workflows/Python%20Package%20Tests/badge.svg)](https://github.com/nabla-math/nabla/actions)
+[![Build Status](https://github.com/MustafaMahmoud-ILE/Nabla/actions/workflows/python-test.yml/badge.svg)](https://github.com/MustafaMahmoud-ILE/Nabla/actions)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
 **Nabla** is a production-grade Python library designed for mathematicians, engineers, and data scientists who want the power of **Mathematica** or **MATLAB** with the modern elegance of Python. By placing **LaTeX** at the core of the developer experience, Nabla eliminates the friction between "math on paper" and "math in code."
@@ -73,13 +73,9 @@ Nabla is stress-tested against:
 - **Relations**: Support for $=$, $<$, and $>$ symbols.
 - **Performance**: High-speed vectorization via `to_numpy()`.
 
-## 📖 Documentation
-
-Complete documentation and tutorials are available at [docs.nabla-math.org](https://docs.nabla-math.org) (Coming Soon).
-
 ## 🤝 Contributing
 
-We welcome contributions from the mathematical and open-source communities! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions from the mathematical and open-source communities! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. See the [GitHub Repository](https://github.com/MustafaMahmoud-ILE/Nabla) for the latest updates.
 
 ## 📄 License
 
