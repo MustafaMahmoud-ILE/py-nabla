@@ -1,43 +1,98 @@
+"""
+py-nabla: Mathematical Computing in the Language of Thought.
+
+A Python library for symbolic and numerical mathematics with a LaTeX-first
+interface, powered by SymPy and NumPy.
+
+Quick start::
+
+    import py_nabla as nb
+
+    f = nb.parse(r"\\frac{d}{dx}(x^2 + \\sin(x))")
+    print(f.simplify())        # 2*x + cos(x)
+    print(f.latex())           # $2 x + \\cos{\\left(x \\right)}$
+    print(f.evaluate(x=1.0))   # 2.5403...
+"""
+
+__version__ = "1.0.0"
+__author__ = "Nabla Team"
+__email__ = "info@nabla-math.org"
+__license__ = "MIT"
+__url__ = "https://github.com/MustafaMahmoud-ILE/py-nabla"
+
+# ── Core engine ──────────────────────────────────────────────────────────────
 from .parser.parser import LaTeXParser
-from .core.expression import Expression as NablaExpression
+from .core.expression import Expression
+from .core.expression import Expression as NablaExpression  # backwards compat alias
 
-__version__ = "0.1.0"
-
-# Global parser instance
 _default_parser = LaTeXParser()
 
-def expr(latex_str: str) -> NablaExpression:
+
+def parse(latex_str: str) -> Expression:
     """
-    Parses a LaTeX string into a Nabla Expression.
-    
-    Example:
-        >>> f = expr(r"\frac{d}{dx}(x^2)")
-        >>> print(f.simplify())
-        2*x
+    Parse a LaTeX mathematical expression into a py-nabla Expression.
+
+    This is the main entry point for the library.
+
+    Args:
+        latex_str: A LaTeX mathematical expression as a string.
+
+    Returns:
+        An :class:`~py_nabla.core.expression.Expression` object.
+
+    Raises:
+        :class:`~py_nabla.core.exceptions.NablaParseError`: If the input
+            cannot be parsed.
+
+    Examples:
+        >>> import py_nabla as nb
+        >>> f = nb.parse(r"x^2 + 1")
+        >>> f.diff('x')
+        Expression(2*x)
+        >>> f.evaluate(x=3)
+        10.0
     """
     sympy_expr = _default_parser.parse(latex_str)
-    return NablaExpression(sympy_expr, _latex_source=latex_str)
+    return Expression(sympy_expr, _latex_source=latex_str)
 
-# Alias for consistent API
-parse = expr
 
-def symbols(names: str):
-    """
-    Creates symbolic variables.
-    Equivalent to sympy.symbols.
-    """
-    from sympy import symbols as sympy_symbols
-    return sympy_symbols(names)
+# Alias for backwards compatibility
+expr = parse
 
-def render(expression: NablaExpression, mode: str = 'inline') -> str:
-    """
-    Renders an expression as LaTeX.
-    """
-    return expression.latex()
+from sympy import symbols  # re-exported for convenience  # noqa: E402
 
-# Placeholder for plotting to prevent import errors if called
-def plot(*args, **kwargs):
-    from .plotting.plotter import plot as _plot
-    return _plot(*args, **kwargs)
+# ── Rendering ─────────────────────────────────────────────────────────────────
+from .rendering import render_latex  # noqa: E402
 
-__all__ = ["expr", "parse", "symbols", "render", "plot", "NablaExpression"]
+# ── Plotting (optional) ───────────────────────────────────────────────────────
+try:
+    from .plotting import plot, plot3d, plot_parametric
+    _PLOTTING_AVAILABLE = True
+except ImportError:
+    _PLOTTING_AVAILABLE = False
+
+    def _no_plot(*args, **kwargs):
+        raise ImportError(
+            "Plotting requires matplotlib.\n"
+            "Install it with:  pip install py-nabla[plotting]\n"
+            "or:               pip install matplotlib"
+        )
+
+    plot = plot3d = plot_parametric = _no_plot  # type: ignore[assignment]
+
+# ── Public API ────────────────────────────────────────────────────────────────
+__all__ = [
+    # Version
+    "__version__",
+    # Core
+    "parse",
+    "expr",
+    "symbols",
+    "Expression",
+    # Rendering
+    "render_latex",
+    # Plotting
+    "plot",
+    "plot3d",
+    "plot_parametric",
+]

@@ -1,45 +1,85 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "py-nabla"
-version = "0.1.0-alpha"
+version = "1.0.0"
+description = "Mathematical computing with a LaTeX-first interface — symbolic, numeric, and beautiful."
+readme = "README.md"
+license = { text = "MIT" }
 authors = [
     { name = "Nabla Team", email = "info@nabla-math.org" },
 ]
-description = "A LaTeX-first mathematical computing library combining symbolic and numeric analysis."
-readme = "README.md"
-requires-python = ">=3.9"
-license = { text = "MIT" }
-keywords = ["latex", "mathematics", "symbolic", "numeric", "calculus", "sympy"]
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Topic :: Scientific/Engineering :: Mathematics",
+keywords = [
+    "mathematics", "latex", "symbolic", "numeric",
+    "calculus", "algebra", "sympy", "numpy", "earley-parser",
 ]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.9"
 dependencies = [
     "sympy>=1.12",
     "numpy>=1.24",
     "lark>=1.1",
 ]
 
-[project.urls]
-"Homepage" = "https://github.com/MustafaMahmoud-ILE/py-nabla"
-"Bug Tracker" = "https://github.com/MustafaMahmoud-ILE/py-nabla/issues"
-"Repository" = "https://github.com/MustafaMahmoud-ILE/py-nabla"
-
 [project.optional-dependencies]
-plotting = ["matplotlib>=3.7"]
-numeric = ["scipy>=1.10"]
+plotting = [
+    "matplotlib>=3.7",
+]
 dev = [
     "pytest>=7.4",
+    "pytest-cov>=4.1",
     "black>=23.0",
     "mypy>=1.5",
+    "flake8>=6.0",
     "sphinx>=7.0",
+    "sphinx-rtd-theme>=1.3",
 ]
+all = ["py-nabla[plotting,dev]"]
+
+[project.urls]
+"Homepage"      = "https://github.com/MustafaMahmoud-ILE/py-nabla"
+"Bug Tracker"   = "https://github.com/MustafaMahmoud-ILE/py-nabla/issues"
+"Repository"    = "https://github.com/MustafaMahmoud-ILE/py-nabla"
+"Documentation" = "https://github.com/MustafaMahmoud-ILE/py-nabla#readme"
 
 [tool.setuptools.packages.find]
-where = ["."]
+where   = ["."]
 include = ["py_nabla*"]
+
+[tool.pytest.ini_options]
+testpaths    = ["tests"]
+python_files = "test_*.py"
+addopts      = "--verbose"
+
+[tool.coverage.run]
+source = ["py_nabla"]
+omit   = ["tests/*", "setup.py", "scratch/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+[tool.black]
+line-length    = 100
+target-version = ["py39"]
