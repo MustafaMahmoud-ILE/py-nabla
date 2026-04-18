@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-04-19
+
+### Fixed
+- **Grammar Robustness**: Added missing multiplication operators (`\cdot`, `\times`, `\ast`).
+- **Notation Support**: Added Greek letters in dot notation (`\dot`, `\ddot`) and vectors (`\vec`).
+- **Piecewise Logic**: Fixed conditions in `cases` environment to support logical relations (e.g., $x < 0$).
+- **Preprocessor Fixes**: Protected environment names from being split by the symbol splitter.
+- **Differential Support**: Added missing `dw`, `ds`, `du`, `dv`, `dr` differentials.
+- **Transformer Fixes**: Improved handling of SymPy Symbol objects in derivative and vector handlers.
+
 ## [1.0.0] - 2026-04-18
 
 ### Added
