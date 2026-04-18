@@ -1,7 +1,7 @@
 import pytest
 import json
 import os
-from nabla import expr
+from py_nabla import expr
 from sympy import simplify, sympify
 
 def load_test_cases():

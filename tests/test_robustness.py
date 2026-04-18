@@ -1,6 +1,6 @@
 import pytest
-from nabla import expr, NablaExpression
-from nabla.core.exceptions import NablaParseError
+from py_nabla import expr, NablaExpression
+from py_nabla.core.exceptions import NablaParseError
 from sympy import simplify, sympify, pi, oo, Rational, symbols, powsimp
 
 def test_deep_nesting():

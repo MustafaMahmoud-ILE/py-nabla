@@ -1,4 +1,4 @@
-from nabla import expr, symbols, render, plot
+from py_nabla import expr, symbols, render, plot
 import matplotlib.pyplot as plt
 
 def demo():

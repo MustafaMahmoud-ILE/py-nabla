@@ -1,6 +1,6 @@
 # ∇ Nabla: Mathematics at the speed of thought.
 
-[![PyPI version](https://img.shields.io/badge/pypi-0.1.0--alpha-blue.svg)](https://pypi.org/project/nabla/)
+[![PyPI version](https://img.shields.io/badge/pypi-0.1.0--alpha-blue.svg)](https://pypi.org/project/py_py_nabla/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://github.com/MustafaMahmoud-ILE/Nabla/actions/workflows/python-test.yml/badge.svg)](https://github.com/MustafaMahmoud-ILE/Nabla/actions)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
@@ -18,17 +18,17 @@ For too long, Python developers have had to manually translate complex LaTeX equ
 ## 🛠️ Installation
 
 ```bash
-pip install nabla
+pip install py-nabla
 ```
 
-*Note: For plotting support, use `pip install nabla[plotting]`.*
+*Note: For plotting support, use `pip install py-nabla[plotting]`.*
 
 ## ✨ Quickstart: The "Wow" Moment
 
 Differentiate a complex integral and evaluate it numerically in just three lines of code:
 
 ```python
-from nabla import expr
+from py_nabla import expr
 
 # 1. Parse your LaTeX naturally
 f = expr(r"\frac{d}{dx} \int_0^x \sin(t^2) dt")
@@ -62,7 +62,7 @@ NablaParseError: Unexpected token
 ### 🔍 Deep Decision Logging
 Curious why `xy` was split? Enable debug logging to see every decision the parser makes:
 ```python
-from nabla.utils.logger import set_debug_mode
+from py_nabla.utils.logger import set_debug_mode
 set_debug_mode(True)
 ```
 

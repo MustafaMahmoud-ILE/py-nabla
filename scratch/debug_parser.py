@@ -1,9 +1,9 @@
-from nabla.parser.parser import LaTeXParser
+from py_nabla.parser.parser import LaTeXParser
 import sympy
 
 parser = LaTeXParser()
 # Set debug mode
-from nabla.utils.logger import set_debug_mode
+from py_nabla.utils.logger import set_debug_mode
 set_debug_mode(True)
 
 latex = r"\frac{d}{dx} \sin(x^2)"

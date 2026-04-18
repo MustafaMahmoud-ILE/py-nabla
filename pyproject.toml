@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nabla"
+name = "py-nabla"
 version = "0.1.0-alpha"
 authors = [
     { name = "Nabla Team", email = "info@nabla-math.org" },
@@ -42,4 +42,4 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["nabla*"]
+include = ["py_nabla*"]
