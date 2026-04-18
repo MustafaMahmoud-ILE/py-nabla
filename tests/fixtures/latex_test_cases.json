@@ -1,0 +1,26 @@
+{
+  "basic_arithmetic": [
+    {"input": "x + y", "expected": "x + y"},
+    {"input": "2x", "expected": "2*x"},
+    {"input": "x y", "expected": "x*y"},
+    {"input": "\\frac{1}{2}", "expected": "1/2"},
+    {"input": "x^2", "expected": "x**2"}
+  ],
+  "derivatives": [
+    {"input": "\\frac{d}{dx}(x^2)", "expected": "2*x"},
+    {"input": "\\frac{d}{dx}(\\sin(x))", "expected": "cos(x)"}
+  ],
+  "integrals": [
+    {"input": "\\int x^2 dx", "expected": "x**3/3"},
+    {"input": "\\int \\sin(x) dx", "expected": "-cos(x)"}
+  ],
+  "functions": [
+    {"input": "\\sin(x)", "expected": "sin(x)"},
+    {"input": "\\ln(x)", "expected": "log(x)"},
+    {"input": "\\sqrt{x}", "expected": "sqrt(x)"}
+  ],
+  "implicit_multiplication": [
+    {"input": "2ax", "expected": "2*a*x"},
+    {"input": "xy", "expected": "x*y"}
+  ]
+}

@@ -1,0 +1,102 @@
+?start: relation | expr
+
+?relation: expr "=" expr  -> eq
+        | expr "<" expr  -> lt
+        | expr ">" expr  -> gt
+
+?expr: term
+      | expr "+" term   -> add
+      | expr "-" term   -> sub
+      | "-" expr        -> neg
+      | "+" expr
+
+?term: factor
+      | term "*" factor -> mul
+      | term "/" factor -> div
+      | term factor     -> implicit_mul
+
+?factor: base
+       | base "^" atom          -> power
+       | base "^" "{" expr "}"  -> power
+       | base "_" atom          -> subscript
+       | base "_" "{" expr "}"  -> subscript
+
+?base: NUMBER
+     | SYMBOL
+     | greek_letter
+     | function
+     | derivative
+     | partial_derivative
+     | fraction
+     | integral
+     | limit
+     | matrix
+     | vector
+     | infinity
+     | "(" expr ")"
+     | "|" expr "|"    -> absolute
+
+// Fractions
+fraction: "\\frac" "{" expr "}" "{" expr "}"
+
+// Derivatives
+derivative: "\\frac" "{" "d" order? "}" "{" DIFFERENTIAL order? "}" (parens_expr | factor)?
+          | "\\frac" "{" "d" order? expr "}" "{" DIFFERENTIAL order? "}"
+
+partial_derivative: "\\frac" "{" "\\partial" order? "}" "{" "\\partial" SYMBOL order? "}" (parens_expr | factor)?
+                  | "\\frac" "{" "\\partial" order? expr "}" "{" "\\partial" SYMBOL order? "}"
+
+?order: "^" atom
+
+?parens_expr: "(" expr ")"
+
+// Integrals
+integral: "\\int" limits? expr DIFFERENTIAL
+
+limits: "_" atom "^" atom
+      | "_" atom
+      | "^" atom
+
+// Limits
+limit: "\\lim" "_{" SYMBOL "\\to" expr "}" expr
+
+// Functions
+function: FUNC_NAME "(" expr ")"
+        | FUNC_NAME "{" expr "}"
+        | FUNC_NAME expr
+
+// Matrix
+matrix: "\\begin{bmatrix}" matrix_rows "\\end{bmatrix}"
+      | "\\begin{pmatrix}" matrix_rows "\\end{pmatrix}"
+
+matrix_rows: matrix_row ("\\\\" matrix_row)*
+matrix_row: expr ("&" expr)*
+
+// Vector
+vector: "\\vec" "{" SYMBOL "}"
+      | "\\mathbf" "{" SYMBOL "}"
+
+// Greek letters
+greek_letter: GREEK_LOWER | GREEK_UPPER
+
+infinity: "\\infty"
+
+GREEK_LOWER: "\\alpha" | "\\beta" | "\\gamma" | "\\delta" | "\\epsilon" 
+           | "\\theta" | "\\lambda" | "\\mu" | "\\pi" | "\\sigma" | "\\phi" | "\\omega"
+
+GREEK_UPPER: "\\Gamma" | "\\Delta" | "\\Theta" | "\\Lambda" | "\\Pi" | "\\Sigma" | "\\Phi" | "\\Omega"
+
+FUNC_NAME: "\\sin" | "\\cos" | "\\tan" | "\\cot" | "\\sec" | "\\csc"
+         | "\\arcsin" | "\\arccos" | "\\arctan"
+         | "\\sinh" | "\\cosh" | "\\tanh"
+         | "\\log" | "\\ln" | "\\exp"
+         | "\\sqrt"
+
+?atom: NUMBER | SYMBOL | greek_letter | infinity | "(" expr ")"
+
+SYMBOL: /[a-zA-Z]/
+DIFFERENTIAL: "dx" | "dy" | "dz" | "dt"
+NUMBER: /\d+\.?\d*/
+
+%import common.WS
+%ignore WS
