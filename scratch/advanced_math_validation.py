@@ -1,37 +1,38 @@
 import py_nabla as nb
-from sympy import symbols, Function
+from sympy import symbols, Function, Eq, exp, sin, cos, besselj, bessely
 
-def advanced_math_validation():
-    print("--- py-nabla ADVANCED MATHEMATICAL VALIDATION ---")
+def extreme_math_validation():
+    print("--- py-nabla EXTREME MATHEMATICAL VALIDATION ---")
     
-    # 1. Quantum Mechanics: Airy's Equation
-    # y'' - t*y = 0
-    print("\n[1] Validating Airy Equation (Quantum Physics)...")
-    airy_eq = nb.parse(r"y'' - t y = 0")
-    airy_sol = airy_eq.dsolve(indep_var='t')
-    print(f"Analytical Solution: {airy_sol.latex()}")
+    # 1. Bessel's Differential Equation (Order 0)
+    # t^2 y'' + t y' + t^2 y = 0
+    print("\n[1] Validating Bessel Differential Equation (Cylindrical Physics)...")
+    bessel_eq = nb.parse(r"t^2 y'' + t y' + t^2 y = 0")
+    # Series solution is typical for Bessel if analytical fails, but SymPy handles Besselj
+    bessel_sol = bessel_eq.dsolve(indep_var='t', method='analytical')
+    print(f"Bessel Solution: {bessel_sol.latex()}")
 
-    # 2. Electrical Engineering: Integro-Differential Equation
-    # i'(t) + 3*i(t) + 2 * \int_0^t i(tau) dtau = 1
-    print("\n[2] Validating RLC Circuit (Integro-Differential)...")
-    rlc_eq = nb.parse(r"i' + 3 i + 2 \int_0^t i(\tau) d\tau = 1")
-    rlc_sol = rlc_eq.dsolve(func_var='i')
-    print(f"IDE Solution: {rlc_sol.latex()}")
+    # 2. Volterra Integral Equation of the Second Kind (Convolution)
+    # y(t) = exp(t) + \int_0^t sin(t-tau) y(tau) dtau
+    print("\n[2] Validating Volterra Integral Equation (Convolution Theorem)...")
+    volterra_eq = nb.parse(r"y = \exp{t} + \int_0^t \sin{t-\tau} y(\tau) d\tau")
+    volterra_sol = volterra_eq.dsolve(method='laplace')
+    print(f"Volterra Solution: {volterra_sol.latex()}")
 
-    # 3. Higher Order Harmonic: 4th Order
-    # y'''' - y = 0
-    print("\n[3] Validating 4th Order Linear ODE...")
-    fourth_order = nb.parse(r"y^{ (4) } - y = 0")
-    fourth_sol = fourth_order.dsolve()
-    print(f"4th Order Solution: {fourth_sol.latex()}")
+    # 3. High-Order Linear ODE (6th Order)
+    # y^{(6)} - y = 0
+    print("\n[3] Validating 6th Order Linear ODE (Structural Stability)...")
+    sixth_order = nb.parse(r"y^{ (6) } - y = 0")
+    sixth_sol = sixth_order.dsolve()
+    print(f"6th Order Solution: {sixth_sol.latex()}")
 
-    # 4. Nonlinear Fallback: Logistic Growth
-    # y' = y (1 - y)
-    print("\n[4] Validating Nonlinear Power Series Fallback...")
-    logistic = nb.parse(r"y' = y (1 - y)")
-    # Should fallback to analytical or series
-    logistic_sol = logistic.dsolve(method='series', series_order=4)
-    print(f"Series Solution: {logistic_sol.latex()}")
+    # 4. Quantum Harmonic Oscillator (Hermite-like setup)
+    # y'' - t^2 y = -E y => y'' + (E - t^2)y = 0
+    print("\n[4] Validating Quantum SHO (Special Functions)...")
+    sho_eq = nb.parse(r"y'' + (E - t^2) y = 0")
+    # This usually yields Weber functions / Parabolic Cylinder functions
+    sho_sol = sho_eq.dsolve(indep_var='t', method='analytical')
+    print(f"Quantum SHO Solution: {sho_sol.latex()}")
 
 if __name__ == "__main__":
-    advanced_math_validation()
+    extreme_math_validation()

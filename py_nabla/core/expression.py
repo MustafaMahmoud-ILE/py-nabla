@@ -263,9 +263,9 @@ class Expression:
                 method = 'analytical'
         
         # Build func and convert symbols if routing differently
-        y_func = Function(func_var)(Symbol(indep_var))
+        t_sym = Symbol(indep_var)
         solver_obj = LaplaceSolver()
-        eq_func = solver_obj._symbol_to_applied_function(self._expr, Symbol(func_var), y_func)
+        eq_func = solver_obj._symbol_to_applied_function(self._expr, Symbol(func_var), t_sym)
         
         if method == 'series':
             hint = '1st_power_series' if self._expr.has(sp.Derivative) else 'all_Integral'

@@ -32,55 +32,75 @@ class LaplaceSolver:
         find_derivs(expr)
         return max_order
 
-    def _symbol_to_applied_function(self, expr, symbol, func):
-        """Converts Symbol y to Function y(t) inside evaluating expressions."""
-        def replacer(node, local_var=None):
-            if isinstance(node, Derivative):
-                if node.args[0] == symbol:
-                    # Differentiation is wrt to args[1:], keep it
-                    new_args = [func.func(local_var) if local_var else func] + [replacer(a, local_var) if isinstance(a, sp.Basic) else a for a in node.args[1:]]
-                    return Derivative(*new_args, evaluate=False)
-            elif isinstance(node, Integral):
-                # Check for dummy variables in limits
-                if len(node.args) > 1 and isinstance(node.args[1], tuple) and len(node.args[1]) > 0:
-                    dummy = node.args[1][0]
-                    # Pass the dummy down to children so y becomes y(dummy)
-                    new_args = [replacer(node.args[0], dummy)] + list(node.args[1:])
-                    return Integral(*new_args)
-            elif node == symbol:
-                return func.func(local_var) if local_var else func
-            
-            new_args = [replacer(arg, local_var) if isinstance(arg, sp.Basic) else arg for arg in node.args]
-            return node.func(*new_args) if new_args else node
+    def _symbol_to_applied_function(self, expr, symbol, indep_var):
+        """
+        Converts all instances of Symbol 'y' to Function 'y(t)' or 'y(tau)'.
+        Uses Wild patterns to target symbols specifically by name.
+        """
+        y_f = sp.Function(symbol.name)
+        # Match any Symbol with the target name
+        y_w = sp.Wild('y_w', properties=[lambda x: isinstance(x, sp.Symbol) and x.name == symbol.name])
+        
+        def transform_integrals(node):
+            if isinstance(node, Integral):
+                dummy = indep_var
+                if len(node.args) > 1:
+                    limit_spec = node.args[1]
+                    if isinstance(limit_spec, tuple) and len(limit_spec) > 0:
+                        dummy = limit_spec[0]
+                    elif isinstance(limit_spec, sp.Symbol):
+                        dummy = limit_spec
+                
+                # Recursive call on children to handle nested integrals first
+                new_integrand = node.args[0].replace(lambda x: isinstance(x, Integral), transform_integrals)
+                # Apply local dummy binding using wildcard to avoid ID mismatch
+                new_integrand = new_integrand.replace(y_w, y_f(dummy))
+                return Integral(new_integrand, *node.args[1:])
+            return None
 
-        return replacer(expr)
+        # 1. First, process all integrals to bind symbols to their local dummy variables
+        expr_with_integrals = expr.replace(lambda x: isinstance(x, Integral), transform_integrals)
+        
+        # 2. Finally, map any remaining instances of the symbol (the global independent variable scope)
+        return expr_with_integrals.replace(y_w, y_f(indep_var))
 
     def _apply_laplace_integral_theorem(self, expr, transform_func, indep_var, s_var):
         """
-        Replaces LaplaceTransform(Integral(y(tau), (tau, 0, t)), t, s)
-        with Y(s)/s natively.
+        Replaces LaplaceTransform(Integral(y(tau)*g(t-tau), (tau, 0, t)), t, s)
+        with Y(s)*G(s) natively using Convolution Theorem.
         """
         def replacer(node):
-            # Target is explicitly LaplaceTransform(Integral(...))
             from sympy.integrals.transforms import LaplaceTransform
             if isinstance(node, LaplaceTransform):
                 integrand = node.args[0]
                 if isinstance(integrand, Integral):
-                    # Check if the structure matches \int_0^t y(tau)
-                    int_body = integrand.args[0]
-                    var_bound = integrand.args[1]
-                    if len(var_bound) == 3:
-                        tau_var, lower, upper = var_bound
-                        if upper == indep_var and lower == 0:
-                            # It's a standard IDE integral from 0 to t
-                            # We replace it with Y(s)/s
-                            # But wait, what if the integrand is f(t-\tau) y(\tau)? (Convolution).
-                            # If it's just y(\tau), then the transform is Y(s)/s
-                            # We can generalize later, for now we map direct functions.
-                            if int_body.subs(tau_var, indep_var) == transform_func:
-                                return sp.Symbol('Y_LAPLACE_INTERNAL') / s_var
+                    # Integral(body, (var, 0, indep_var))
+                    body = integrand.args[0]
+                    limits = integrand.args[1]
+                    if len(limits) == 3 and limits[1] == 0 and limits[2] == indep_var:
+                        tau_var = limits[0]
+                        # Look for y(tau)
+                        y_tau = transform_func.subs(indep_var, tau_var)
+                        
+                        # Try to factor out y(tau)
+                        # body = y(tau) * g(t-tau)
+                        from sympy import simplify, Wild
+                        # Use a Wild to match the kernel
+                        G = Wild('G', exclude=[tau_var])
+                        match = body.match(G * y_tau)
+                        
+                        if match and G in match:
+                            g_t_tau = match[G]
+                            # Check if g is a function of (t-tau)
+                            # We can use substitution to check if it depends on tau only through (t-tau)
+                            g_t = g_t_tau.subs(indep_var - tau_var, indep_var)
+                            if not g_t.has(tau_var):
+                                G_s = laplace_transform(g_t, indep_var, s_var, noconds=True)
+                                Y_s = sp.Symbol('Y_LAPLACE_INTERNAL')
+                                return G_s * Y_s
             
             new_args = [replacer(arg) if isinstance(arg, sp.Basic) else arg for arg in node.args]
+
             return node.func(*new_args) if new_args else node
             
         return replacer(expr)
@@ -96,7 +116,8 @@ class LaplaceSolver:
         Y_s = Symbol('Y_LAPLACE_INTERNAL')
 
         # 1. Map symbols to functions (y -> y(t))
-        eq_func = self._symbol_to_applied_function(sympy_expr, y_sym, y_func)
+        eq_func = self._symbol_to_applied_function(sympy_expr, y_sym, t)
+
 
         # 2. Extract ODE Form (Eq or Expr=0)
         if isinstance(eq_func, Eq):
