@@ -14,7 +14,7 @@ Quick start::
     print(f.evaluate(x=1.0))   # 2.5403...
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __author__ = "Nabla Team"
 __email__ = "info@nabla-math.org"
 __license__ = "MIT"
@@ -52,6 +52,10 @@ def parse(latex_str: str) -> Expression:
         >>> f.evaluate(x=3)
         10.0
     """
+    if len(latex_str) > 10000:
+        from .core.exceptions import NablaParseError
+        raise NablaParseError(latex_str[:100], 1, 1, "LaTeX expression too long (>10000 chars) - DoS protection")
+        
     sympy_expr = _default_parser.parse(latex_str)
     return Expression(sympy_expr, _latex_source=latex_str)
 
