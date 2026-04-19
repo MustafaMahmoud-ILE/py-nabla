@@ -67,9 +67,9 @@ fraction: "\\frac" "{" expr "}" "{" expr "}"
 derivative: "\\frac" "{" "d" order? "}" "{" DIFFERENTIAL order? "}" (parens_expr | factor)?
           | "\\frac" "{" "d" order? expr "}" "{" DIFFERENTIAL order? "}"
 
-prime_derivative: SYMBOL "'"                -> first_prime
-                | SYMBOL "''"               -> second_prime
-                | SYMBOL "^{(" NUMBER ")}"  -> nth_prime
+prime_derivative: SYMBOL "'"                            -> first_prime
+                | SYMBOL "''"                           -> second_prime
+                | SYMBOL "^" "{" "(" NUMBER ")" "}"     -> nth_prime
 
 
 // ================================================================
