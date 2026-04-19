@@ -225,6 +225,60 @@ class Expression:
         solutions = sympy_solve(self._expr, var, **kwargs)
         return [Expression(sol) for sol in solutions]
 
+    def dsolve(
+        self,
+        func_var: str = 'y',
+        indep_var: str = 't',
+        method: str = 'laplace',
+        initial_conditions: Optional[Dict] = None,
+        series_order: int = 5,
+        **kwargs
+    ) -> "Expression":
+        """
+        Solve differential and integral equations.
+        
+        Args:
+            func_var: Unknown function (e.g., 'y')
+            indep_var: Independent variable (e.g., 't')
+            method: 'laplace' | 'series' | 'analytical'
+            initial_conditions: Dict of initial values e.g. {y(0): 1}
+            series_order: Number of terms for series method
+            
+        Returns:
+            Expression: General solution.
+        """
+        import sympy as sp
+        from sympy import Function, Symbol
+        from py_nabla.solvers.laplace_solver import LaplaceSolver
+        from py_nabla.solvers.solver_exceptions import NablaSolveError, LaplaceTransformError
+        
+        if method == 'laplace':
+            try:
+                solver = LaplaceSolver()
+                ans = solver.solve(self._expr, func_var, indep_var, initial_conditions)
+                return Expression(ans)
+            except LaplaceTransformError as e:
+                import warnings
+                warnings.warn(f"Laplace solver failed: {e}. Falling back to analytical method.")
+                method = 'analytical'
+        
+        # Build func and convert symbols if routing differently
+        y_func = Function(func_var)(Symbol(indep_var))
+        solver_obj = LaplaceSolver()
+        eq_func = solver_obj._symbol_to_applied_function(self._expr, Symbol(func_var), y_func)
+        
+        if method == 'series':
+            hint = '1st_power_series' if self._expr.has(sp.Derivative) else 'all_Integral'
+            ans = sp.dsolve(eq_func, hint=hint, n=series_order, ics=initial_conditions, **kwargs)
+            return Expression(ans)
+            
+        elif method == 'analytical':
+            # Rely on base dsolve entirely
+            ans = sp.dsolve(eq_func, ics=initial_conditions, **kwargs)
+            return Expression(ans)
+        
+        raise NablaSolveError(f"Unknown dsolve method: {method}")
+
     # ================================================================
     # NUMERICAL EVALUATION
     # ================================================================
@@ -270,7 +324,7 @@ class Expression:
     def _vectorized_evaluate(self, subs: Dict) -> np.ndarray:
         """Internal: evaluate using lambdify for NumPy arrays."""
         from sympy import lambdify
-        vars_list = list(subs.keys())
+        vars_list = sorted(subs.keys(), key=str)
         func = lambdify(vars_list, self._expr, modules='numpy')
         return func(*[subs[v] for v in vars_list])
 

@@ -32,6 +32,7 @@
      | greek_letter
      | function
      | derivative
+     | prime_derivative
      | partial_derivative
      | fraction
      | integral
@@ -65,6 +66,10 @@ fraction: "\\frac" "{" expr "}" "{" expr "}"
 // ================================================================
 derivative: "\\frac" "{" "d" order? "}" "{" DIFFERENTIAL order? "}" (parens_expr | factor)?
           | "\\frac" "{" "d" order? expr "}" "{" DIFFERENTIAL order? "}"
+
+prime_derivative: SYMBOL "'"                -> first_prime
+                | SYMBOL "''"               -> second_prime
+                | SYMBOL "^{(" NUMBER ")}"  -> nth_prime
 
 
 // ================================================================
@@ -212,7 +217,7 @@ infinity: "\\infty"
 ?atom: NUMBER | SYMBOL | greek_letter | infinity | "(" expr ")"
 
 SYMBOL: /[a-zA-Z]/
-DIFFERENTIAL: "dx" | "dy" | "dz" | "dt" | "ds" | "du" | "dv" | "dr" | "dw" | "d\\theta" | "d\\phi"
+DIFFERENTIAL: "dx" | "dy" | "dz" | "dt" | "ds" | "du" | "dv" | "dr" | "dw" | "d\\theta" | "d\\phi" | "d\\tau"
 NUMBER: /\d+\.?\d*/
 
 %import common.WS

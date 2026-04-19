@@ -123,8 +123,17 @@ class LaTeXTransformer(Transformer):
             # Find the differential variable (a Symbol from DIFFERENTIAL)
             var = args[-2] if isinstance(args[-2], sympy.Basic) else args[0]
             func = args[-1]
-            return diff(func, var)
-        return diff(args[0], Symbol('x'))  # fallback
+            return Derivative(func, var, evaluate=False)
+        return Derivative(args[0], Symbol('x'), evaluate=False)  # fallback
+
+    def first_prime(self, args):
+        return Derivative(args[0], Symbol('t'), 1, evaluate=False)
+
+    def second_prime(self, args):
+        return Derivative(args[0], Symbol('t'), 2, evaluate=False)
+
+    def nth_prime(self, args):
+        return Derivative(args[0], Symbol('t'), int(str(args[-1])), evaluate=False)
 
     # ================================================================
     # PARTIAL DERIVATIVES
@@ -133,8 +142,8 @@ class LaTeXTransformer(Transformer):
     def partial_derivative(self, args):
         """∂f/∂x  →  Derivative(f, x)"""
         if len(args) >= 2:
-            return diff(args[-1], args[-2])
-        return diff(args[0], Symbol('x'))
+            return Derivative(args[-1], args[-2], evaluate=False)
+        return Derivative(args[0], Symbol('x'), evaluate=False)
 
     def mixed_partial(self, args):
         """∂²f/∂x∂y  →  Derivative(f, x, y)"""
@@ -144,9 +153,7 @@ class LaTeXTransformer(Transformer):
         exprs = [a for a in args if not isinstance(a, sympy.Symbol)]
         if exprs and syms:
             result = exprs[0]
-            for s in syms:
-                result = diff(result, s)
-            return result
+            return Derivative(result, *syms, evaluate=False)
         return Integer(0)
 
     # ================================================================
@@ -158,19 +165,23 @@ class LaTeXTransformer(Transformer):
         var = args[-1]    # DIFFERENTIAL is last
         expr = args[-2]   # expression is second-to-last
 
+        # Use Dummy to prevent variable leakage if limits exist
+        dummy_var = sympy.Dummy(var.name)
+        expr_dummy = expr.subs(var, dummy_var)
+
         # Look for limits tuple
         for arg in args:
             if isinstance(arg, tuple) and len(arg) == 2:
                 lower, upper = arg
-                return Integral(expr, (var, lower, upper)).doit()
+                return Integral(expr_dummy, (dummy_var, lower, upper))
 
-        return Integral(expr, var).doit()
+        return Integral(expr, var)
 
     def double_integral(self, args):
         var1 = args[-1]
         var2 = args[-2]
         expr = args[-3]
-        return Integral(expr, var2, var1).doit()
+        return Integral(expr, var2, var1)
 
     def contour_integral(self, args):
         # Treat like a regular integral for now
