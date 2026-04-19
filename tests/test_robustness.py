@@ -58,3 +58,25 @@ def test_multi_character_splitting():
     # The remaining letters (g, h, i, t, w) must all appear
     for letter in ("g", "h", "i", "t", "w"):
         assert letter in result_str, f"Letter '{letter}' missing from {result_str}"
+
+def test_empty_string():
+    """Test empty string raises NablaParseError."""
+    with pytest.raises(NablaParseError):
+        expr("")
+    with pytest.raises(NablaParseError):
+        expr("   ")
+
+def test_unicode_handling():
+    """Test unicode characters are parsed or raise appropriately."""
+    # If the user enters a non-math unicode character like Arabic or emojis
+    with pytest.raises(NablaParseError):
+        expr("x + 😊")
+
+def test_eq_returns_boolean():
+    """Test that == operator correctly returns a boolean value."""
+    f = expr("x^2")
+    g = expr("x^2")
+    assert (f == g) is True
+    
+    h = expr("x^3")
+    assert (f == h) is False

@@ -245,7 +245,7 @@ def plot3d(
 
 def plot_parametric(
     x_expr: Union["Expression", Callable],  # type: ignore[name-defined]
-    y_expr: Union["Expression", Callable],
+    y_expr: Union["Expression", Callable],  # type: ignore[name-defined]
     domain: Tuple[float, float] = (0.0, 6.283185307179586),  # 0 to 2π
     var: str = "t",
     num_points: int = 1000,

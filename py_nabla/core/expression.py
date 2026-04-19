@@ -360,8 +360,12 @@ class Expression:
     def __neg__(self):             return Expression(-self._expr)
     def __pos__(self):             return self
 
-    def __eq__(self, other) -> "Expression":  # type: ignore[override]
-        """Create a SymPy Eq (symbolic equation), not a boolean."""
+    def __eq__(self, other) -> bool:  # type: ignore[override]
+        """Check structural equality of expressions."""
+        return self._expr == self._coerce(other)
+
+    def equation(self, other) -> "Expression":
+        """Create a SymPy Eq (symbolic equation)."""
         from sympy import Eq
         return Expression(Eq(self._expr, self._coerce(other)))
 
