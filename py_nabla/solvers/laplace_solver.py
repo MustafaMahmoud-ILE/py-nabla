@@ -9,6 +9,11 @@ from .solver_exceptions import (
     NonlinearODEError,
     InvalidInitialConditionsError
 )
+try:
+    from ..core.fractional import FractionalDerivative
+except ImportError:
+    # Fallback for direct script execution
+    from py_nabla.core.fractional import FractionalDerivative
 
 class LaplaceSolver:
     """Advanced ODE/IDE solver using Laplace Transform."""
@@ -16,179 +21,202 @@ class LaplaceSolver:
     def __init__(self):
         self.s = Symbol('s')
 
-    def _determine_order(self, expr: sp.Expr, func: sp.Function, indep_var: sp.Symbol) -> int:
-        """Determines the max order of the derivative of func with respect to indep_var."""
+    def _determine_order(self, expr, func, indep_var) -> int:
+        """Determines the max order of the derivative."""
         max_order = 0
+        func_name = str(func.func) if hasattr(func, "func") else str(func)
+        var_name = str(indep_var)
+        
         def find_derivs(node):
             nonlocal max_order
-            if isinstance(node, Derivative) and node.args[0] == func:
-                # Count instances of indep_var in differentiation arguments
-                order = sum(1 for var in node.args[1:] if var == indep_var)
-                if order > max_order:
-                    max_order = order
-            for arg in node.args:
-                if isinstance(arg, sp.Basic):
-                    find_derivs(arg)
+            if isinstance(node, Derivative):
+                target = node.args[0]
+                is_match = False
+                if str(target) == func_name or str(target) == f"{func_name}({indep_var})":
+                    is_match = True
+                elif hasattr(target, "func") and str(target.func) == func_name:
+                    is_match = True
+                
+                if is_match:
+                    order = sum(1 for v in getattr(node, "variables", []) if str(v) == var_name)
+                    if order > max_order: max_order = order
+            elif node.__class__.__name__ == "FractionalDerivative":
+                target = getattr(node, "expr", None)
+                if str(target) == func_name or (hasattr(target, "func") and str(target.func) == func_name):
+                    order_val = sp.nsimplify(node.order)
+                    order = int(sp.ceiling(order_val))
+                    if order > max_order: max_order = order
+            
+            for arg in getattr(node, "args", []):
+                if isinstance(arg, sp.Basic): find_derivs(arg)
+        
         find_derivs(expr)
         return max_order
 
     def _symbol_to_applied_function(self, expr, symbol, indep_var):
-        """
-        Converts all instances of Symbol 'y' to Function 'y(t)' or 'y(tau)'.
-        Uses Wild patterns to target symbols specifically by name.
-        """
         y_f = sp.Function(symbol.name)
-        # Match any Symbol with the target name
-        y_w = sp.Wild('y_w', properties=[lambda x: isinstance(x, sp.Symbol) and x.name == symbol.name])
         
-        def transform_integrals(node):
+        def replacer(node):
+            if isinstance(node, sp.Symbol) and node.name == symbol.name:
+                return y_f(indep_var)
             if isinstance(node, Integral):
-                dummy = indep_var
-                if len(node.args) > 1:
-                    limit_spec = node.args[1]
-                    if isinstance(limit_spec, tuple) and len(limit_spec) > 0:
-                        dummy = limit_spec[0]
-                    elif isinstance(limit_spec, sp.Symbol):
-                        dummy = limit_spec
-                
-                # Recursive call on children to handle nested integrals first
-                new_integrand = node.args[0].replace(lambda x: isinstance(x, Integral), transform_integrals)
-                # Apply local dummy binding using wildcard to avoid ID mismatch
-                new_integrand = new_integrand.replace(y_w, y_f(dummy))
-                return Integral(new_integrand, *node.args[1:])
-            return None
-
-        # 1. First, process all integrals to bind symbols to their local dummy variables
-        expr_with_integrals = expr.replace(lambda x: isinstance(x, Integral), transform_integrals)
+                new_args = [replacer(arg) if isinstance(arg, sp.Basic) else arg for arg in node.args]
+                return Integral(*new_args)
+            return node
         
-        # 2. Finally, map any remaining instances of the symbol (the global independent variable scope)
-        return expr_with_integrals.replace(y_w, y_f(indep_var))
+        return expr.replace(lambda x: isinstance(x, (sp.Symbol, Integral)), replacer)
 
     def _apply_laplace_integral_theorem(self, expr, transform_func, indep_var, s_var):
-        """
-        Replaces LaplaceTransform(Integral(y(tau)*g(t-tau), (tau, 0, t)), t, s)
-        with Y(s)*G(s) natively using Convolution Theorem.
-        """
         def replacer(node):
-            from sympy.integrals.transforms import LaplaceTransform
-            if isinstance(node, LaplaceTransform):
+            if node.__class__.__name__ == "LaplaceTransform":
                 integrand = node.args[0]
                 if isinstance(integrand, Integral):
-                    # Integral(body, (var, 0, indep_var))
-                    body = integrand.args[0]
-                    limits = integrand.args[1]
+                    body, limits = integrand.args[0], integrand.args[1]
                     if len(limits) == 3 and limits[1] == 0 and limits[2] == indep_var:
                         tau_var = limits[0]
-                        # Look for y(tau)
                         y_tau = transform_func.subs(indep_var, tau_var)
-                        
-                        # Try to factor out y(tau)
-                        # body = y(tau) * g(t-tau)
-                        from sympy import simplify, Wild
-                        # Use a Wild to match the kernel
+                        from sympy import Wild
                         G = Wild('G', exclude=[tau_var])
                         match = body.match(G * y_tau)
-                        
                         if match and G in match:
-                            g_t_tau = match[G]
-                            # Check if g is a function of (t-tau)
-                            # We can use substitution to check if it depends on tau only through (t-tau)
-                            g_t = g_t_tau.subs(indep_var - tau_var, indep_var)
+                            g_t = match[G].subs(indep_var - tau_var, indep_var)
                             if not g_t.has(tau_var):
                                 G_s = laplace_transform(g_t, indep_var, s_var, noconds=True)
-                                Y_s = sp.Symbol('Y_LAPLACE_INTERNAL')
-                                return G_s * Y_s
-            
-            new_args = [replacer(arg) if isinstance(arg, sp.Basic) else arg for arg in node.args]
+                                if hasattr(G_s, "__iter__") and not isinstance(G_s, sp.Basic): G_s = G_s[0]
+                                return G_s * sp.Symbol('Y_LAPLACE_INTERNAL')
+            return node
+        return expr.replace(lambda x: x.__class__.__name__ == "LaplaceTransform", replacer)
 
-            return node.func(*new_args) if new_args else node
-            
-        return replacer(expr)
-
-    def solve(self, sympy_expr, func_name: str, var_name: str, initial_conditions: Optional[Dict] = None):
-        """
-        Main solver pipeline.
-        """
-        t = Symbol(var_name)
+    def solve(self, sympy_expr, func_name: str, var_name: str, ics: Optional[Dict] = None):
+        t = Symbol(var_name, real=True, positive=True)
         s = self.s
         y_sym = Symbol(func_name)
         y_func = Function(func_name)(t)
         Y_s = Symbol('Y_LAPLACE_INTERNAL')
 
-        # 1. Map symbols to functions (y -> y(t))
-        eq_func = self._symbol_to_applied_function(sympy_expr, y_sym, t)
-
-
-        # 2. Extract ODE Form (Eq or Expr=0)
-        if isinstance(eq_func, Eq):
-            lhs_lap = laplace_transform(eq_func.lhs, t, s, noconds=True)
-            rhs_lap = laplace_transform(eq_func.rhs, t, s, noconds=True)
-            alg_eq = lhs_lap - rhs_lap
+        eq_mapped = self._symbol_to_applied_function(sympy_expr, y_sym, t)
+        
+        # Normalize Eq(lhs, rhs) -> lhs - rhs
+        if hasattr(eq_mapped, 'lhs') and hasattr(eq_mapped, 'rhs'):
+            target_expr = eq_mapped.lhs - eq_mapped.rhs
         else:
-            alg_eq = laplace_transform(eq_func, t, s, noconds=True)
+            target_expr = eq_mapped
 
-        if alg_eq is None:
-            raise LaplaceTransformError("Could not compute Laplace Transform of the equation.")
+        def safe_lt(e, t_var, s_var):
+            from sympy.integrals.transforms import laplace_transform
+            res = laplace_transform(e, t_var, s_var, noconds=True)
+            if hasattr(res, "__iter__") and not isinstance(res, sp.Basic): return res[0]
+            if isinstance(res, sp.Tuple): return res[0]
+            return res
 
-        # 3. Handle Integrals
+        alg_eq = safe_lt(target_expr, t, s)
+        if alg_eq is None: raise LaplaceTransformError("Could not compute Laplace Transform.")
+
+        # Force evaluation of LaplaceTransform nodes that are still symbolic
+        from sympy.integrals.transforms import LaplaceTransform, laplace_transform
+        from sympy import Subs
+        def deep_force_lt(expr):
+            def replacer(node):
+                tag = str(type(node))
+                if "LaplaceTransform" in tag:
+                    arg = node.args[0]
+                    # If it's a custom fractional derivative, use its own logic
+                    if "FractionalDerivative" in str(type(arg)):
+                        lt_res = arg._eval_laplace_transform(node.args[1], node.args[2])
+                        if hasattr(lt_res, "__iter__") and not isinstance(lt_res, sp.Basic): lt_res = lt_res[0]
+                        return lt_res
+                    # If it's a standard derivative, force expansion manually
+                    elif isinstance(arg, Derivative):
+                        t_var, s_var = node.args[1], node.args[2]
+                        target = arg.args[0]
+                        if len(arg.variables) == 1:
+                            # Base case: f'
+                            return s_var * LaplaceTransform(target, t_var, s_var) - target.subs(t_var, 0)
+                        else:
+                            # Recursive case: f^(n)
+                            # Reduce order by 1
+                            lower_deriv = Derivative(target, *arg.variables[:-1])
+                            return s_var * LaplaceTransform(lower_deriv, t_var, s_var) - Subs(lower_deriv, t_var, 0)
+                    elif isinstance(arg, sp.Add):
+                        return sum(deep_force_lt(LaplaceTransform(a, node.args[1], node.args[2])) for a in arg.args)
+                return node
+            
+            new_expr = expr.replace(lambda x: "LaplaceTransform" in str(type(x)), replacer)
+            if new_expr != expr:
+                return deep_force_lt(new_expr)
+            return new_expr
+
+        alg_eq = deep_force_lt(alg_eq)
         alg_eq = self._apply_laplace_integral_theorem(alg_eq, y_func, t, s)
 
-        # 4. Substitute generic Initial Conditions
-        order = self._determine_order(eq_func, y_func, t)
-        target_transform = laplace_transform(y_func, t, s, noconds=True)
-
-        alg_subs = alg_eq.subs(target_transform, Y_s)
+        # Map LaplaceTransform(y) -> Y_s
+        def y_transform_replacer(node):
+            if node.__class__.__name__ == "LaplaceTransform":
+                content = node.args[0]
+                if (hasattr(content, "func") and str(content.func) == func_name) or (str(content) == f"{func_name}({t})") or (str(content) == func_name):
+                    return Y_s
+            return node
         
-        from sympy import Subs
+        alg_subs = alg_eq.replace(lambda x: x.__class__.__name__ == "LaplaceTransform" or "LaplaceTransform" in str(type(x)), y_transform_replacer)
+        
+        # Map Initial Conditions
+        order = self._determine_order(eq_mapped, y_func, t)
         for i in range(order):
             ic_sym = Symbol(f'C_{i+1}')
-            # Function(func_name)(0) for y(0)
             if i == 0:
+                def ic_replacer(node):
+                    name = str(getattr(node, "func", node))
+                    if name == func_name or name == f"{func_name}(t)":
+                        if getattr(node, "args", None) == (0,):
+                            return ic_sym
+                    return node
+                # Target specifically Function applications or Symbol-like results at 0
+                alg_subs = alg_subs.replace(lambda x: hasattr(x, "func") and str(x.func) == func_name, ic_replacer)
                 alg_subs = alg_subs.subs(Function(func_name)(0), ic_sym)
-                alg_subs = alg_subs.subs(y_func.subs(t, 0), ic_sym)
             else:
-                # laplace yields Subs(Derivative(y(t), t), t, 0) for higher order ICs
-                subs_expr = Subs(Derivative(y_func, t, i), t, 0)
-                alg_subs = alg_subs.subs(subs_expr, ic_sym)
-                # Fallback to direct replacement of evaluated diff
-                alg_subs = alg_subs.replace(Derivative(y_func, t, i).subs(t, 0), ic_sym)
+                from sympy import Subs
+                target_deriv = Derivative(y_func, t, i)
+                target_subs = Subs(target_deriv, t, 0)
+                def subs_replacer(node):
+                    if isinstance(node, Subs):
+                        if str(node.expr) == str(target_deriv) and str(node.variables[0]) == str(t) and node.point == (0,):
+                            return ic_sym
+                    if isinstance(node, Derivative):
+                        if str(node) == str(target_deriv.subs(t, 0)):
+                            return ic_sym
+                    return node
+                alg_subs = alg_subs.replace(lambda x: isinstance(x, (Subs, Derivative)), subs_replacer)
+                alg_subs = alg_subs.subs(target_subs, ic_sym)
+                alg_subs = alg_subs.subs(target_deriv.subs(t, 0), ic_sym)
+        
+        
+        
+        
 
-
-        # 5. Solve for Y(s) algebraically
+        # Substitute IC values
+        if ics:
+            for k, v in ics.items():
+                k_norm = k.sympy if hasattr(k, 'sympy') else k
+                v_norm = v.sympy if hasattr(v, 'sympy') else v
+                if str(k_norm) == f"{func_name}(0)" or k_norm == Function(func_name)(0) or str(k_norm) == "0":
+                    alg_subs = alg_subs.subs(Symbol('C_1'), v_norm)
+                for idx in range(1, order):
+                    if str(k_norm) == f"Derivative({func_name}(t), t, {idx}).subs(t, 0)":
+                        alg_subs = alg_subs.subs(Symbol(f'C_{idx+1}'), v_norm)
+        
+        
         try:
             Y_sol = sp.solve(alg_subs, Y_s)
         except Exception:
-            raise NablaSolveError("Failed to solve algebraic equation in s-domain.")
+            raise NablaSolveError("Failed to solve in s-domain.")
 
-        if not Y_sol:
-            raise LaplaceTransformError("No solution found for Y(s). Equation may be nonlinear.")
+        if not Y_sol: raise LaplaceTransformError("No solution found for Y(s).")
         
-        Y_expr = Y_sol[0]
-        from sympy.integrals.transforms import LaplaceTransform
-        if Y_expr.has(LaplaceTransform):
-            raise LaplaceTransformError("Nonlinear or unsolvable laplace form.")
+        Y_expr = sp.nsimplify(Y_sol[0]).factor()
+        y_final = inverse_laplace_transform(Y_expr, s, t)
         
-        # Partial fractions sometimes help inverse Laplace
-        try:
-            Y_expr = sp.apart(Y_expr, s)
-        except Exception:
-            pass
-
-        # 6. Inverse Laplace Transform
-        y_t = inverse_laplace_transform(Y_expr, s, t)
-
         from sympy.integrals.transforms import InverseLaplaceTransform
-        if isinstance(y_t, InverseLaplaceTransform) or y_t.has(InverseLaplaceTransform): # It failed to evaluate
-            raise LaplaceTransformError("Inverse Laplace Transform failed analytically.")
+        if hasattr(y_final, "has") and y_final.has(InverseLaplaceTransform):
+            raise LaplaceTransformError("Inverse Laplace failed to find closed-form solution.")
 
-        from sympy import Subs
-        for i in range(order):
-            ic_sym = Symbol(f'C_{i+1}')
-            if i == 0:
-                y_t = y_t.replace(Function(func_name)(0), ic_sym)
-                y_t = y_t.replace(y_func.subs(t, 0), ic_sym)
-            else:
-                y_t = y_t.replace(Subs(Derivative(y_func, t, i), t, 0), ic_sym)
-                y_t = y_t.replace(Derivative(y_func, t, i).subs(t, 0), ic_sym)
-
-        return Eq(y_func, y_t)
+        return Eq(y_func, y_final)

@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Build Status](https://github.com/MustafaMahmoud-ILE/py-nabla/actions/workflows/python-test.yml/badge.svg)](https://github.com/MustafaMahmoud-ILE/py-nabla/actions)
-[![Documentation](https://img.shields.io/badge/docs-v1.1.0--alpha-green.svg)](https://github.com/MustafaMahmoud-ILE/py-nabla#readme)
+[![Documentation](https://img.shields.io/badge/docs-v1.1.0-green.svg)](https://github.com/MustafaMahmoud-ILE/py-nabla#readme)
 
 **py-nabla** is a production-grade mathematical computing engine that bridges the gap between **LaTeX notation** and **Python execution**. Write math exactly as you think it; execute it with the power of SymPy and NumPy.
 
@@ -68,11 +68,11 @@ nb.plot(f, domain=(-2, 2), title="Differentiated Waveform")
 
 ---
 
-## 💎 Production Features (v1.1.0-alpha)
+## 💎 Production Features (v1.1.0)
 
 ### 🧠 Advanced Parser
 - **Calculus**: Support for $\int, \iint, \oint$, $\lim_{x \to a}$, $\sum, \prod$, and partial derivatives.
-- **Differential/Integral Equations**: Solve ODEs and IDEs using `dsolve()` with a built-in **Laplace Transform** engine. Supports Newton's prime notation ($y', y''$) natively.
+- **Differential/Integral Equations**: Solve ODEs, IDEs, and **Fractional Differential Equations (FDEs)** using `dsolve()` with a built-in **Laplace Transform** engine. Supports Newton's prime notation ($y', y''$) and fractional orders ($y^{(0.5)}$) natively.
 - **Linear Algebra**: Matrix environments (`bmatrix`, `pmatrix`, `vmatrix`) and vector notations.
 - **Piecewise**: Support for `\begin{cases}` environments.
 - **Ambiguity Resolution**: Intelligent splitting of multi-char symbols (e.g., `2weight` $\to 2 \cdot w \cdot e \cdot i \cdot g \cdot h \cdot t$).
@@ -96,6 +96,7 @@ Beautiful bidirectional conversion with custom styles:
 - [Linear Algebra Mastery](docs/tutorial/03_linear_algebra.md)
 - [Advanced Plotting](docs/tutorial/04_plotting.md)
 - [Differential & Integral Equations](docs/tutorial/05_differential_and_integral_equations.md)
+- [Fractional Calculus Guide](docs/tutorial/06_fractional_calculus.md)
 
 ---
 

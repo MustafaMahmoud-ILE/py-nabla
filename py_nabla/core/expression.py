@@ -43,10 +43,10 @@ class Expression:
     def diff(
         self,
         var: Union[str, SympySymbol],
-        order: int = 1,
+        order: Union[int, float, Expr] = 1,
     ) -> "Expression":
         """
-        Differentiate the expression.
+        Differentiate the expression (integer or fractional).
 
         Args:
             var: Variable to differentiate with respect to.
@@ -230,7 +230,7 @@ class Expression:
         func_var: str = 'y',
         indep_var: str = 't',
         method: str = 'laplace',
-        initial_conditions: Optional[Dict] = None,
+        ics: Optional[Dict] = None,
         series_order: int = 5,
         **kwargs
     ) -> "Expression":
@@ -255,11 +255,13 @@ class Expression:
         if method == 'laplace':
             try:
                 solver = LaplaceSolver()
-                ans = solver.solve(self._expr, func_var, indep_var, initial_conditions)
+                ans = solver.solve(self._expr, func_var, indep_var, ics)
                 return Expression(ans)
             except LaplaceTransformError as e:
+                import traceback
+                traceback.print_exc()
                 import warnings
-                warnings.warn(f"Laplace solver failed: {e}. Falling back to analytical method.")
+                warnings.warn(f"Laplace solver failed: {str(e)}. Falling back to analytical method.")
                 method = 'analytical'
         
         # Build func and convert symbols if routing differently
@@ -269,12 +271,12 @@ class Expression:
         
         if method == 'series':
             hint = '1st_power_series' if self._expr.has(sp.Derivative) else 'all_Integral'
-            ans = sp.dsolve(eq_func, hint=hint, n=series_order, ics=initial_conditions, **kwargs)
+            ans = sp.dsolve(eq_func, hint=hint, n=series_order, ics=ics, **kwargs)
             return Expression(ans)
             
         elif method == 'analytical':
             # Rely on base dsolve entirely
-            ans = sp.dsolve(eq_func, ics=initial_conditions, **kwargs)
+            ans = sp.dsolve(eq_func, ics=ics, **kwargs)
             return Expression(ans)
         
         raise NablaSolveError(f"Unknown dsolve method: {method}")

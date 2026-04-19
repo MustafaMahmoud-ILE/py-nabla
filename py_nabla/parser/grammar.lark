@@ -69,7 +69,7 @@ derivative: "\\frac" "{" "d" order? "}" "{" DIFFERENTIAL order? "}" (parens_expr
 
 prime_derivative: SYMBOL "'"                            -> first_prime
                 | SYMBOL "''"                           -> second_prime
-                | SYMBOL "^" "{" "(" NUMBER ")" "}"     -> nth_prime
+                | SYMBOL "^" "{" "(" expr ")" "}"       -> nth_prime
 
 
 // ================================================================
@@ -93,7 +93,7 @@ limits: "_" atom "^" atom
       | "_" atom
       | "^" atom
 
-?order: "^" atom
+?order: "^" "{" expr "}" | "^" atom
 ?parens_expr: "(" expr ")"
 
 

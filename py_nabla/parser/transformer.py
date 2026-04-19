@@ -8,6 +8,7 @@ from sympy import (
     Abs, floor, ceiling, binomial, factorial,
     pi, oo, E, diff, integrate, symbols as sympy_symbols
 )
+from ..core.fractional import FractionalDerivative
 
 
 class LaTeXTransformer(Transformer):
@@ -113,18 +114,30 @@ class LaTeXTransformer(Transformer):
     # ================================================================
 
     def derivative(self, args):
-        # args may be: [var_symbol, operand] or [operand, var_symbol]
-        # The DIFFERENTIAL always gives us the variable.
-        # We gather Symbol and non-Symbol args.
-        if not args:
-            return Integer(1)
-        # Last arg is the function; second-to-last (if Symbol) is var
-        if len(args) >= 2:
-            # Find the differential variable (a Symbol from DIFFERENTIAL)
-            var = args[-2] if isinstance(args[-2], sympy.Basic) else args[0]
-            func = args[-1]
-            return Derivative(func, var, evaluate=False)
-        return Derivative(args[0], Symbol('x'), evaluate=False)  # fallback
+        """d^n f / dx^n"""
+        # args: [order?, var_symbol, order?, (expr | factor)]
+        # This is a bit complex due to optional orders in two places
+        # Simplified logic: 
+        # Last index: expr
+        # Variable: a Symbol in args
+        # Order: Any Symbol/Expr that isn't the var or the func
+        
+        func = args[-1]
+        var = next((a for a in args if isinstance(a, sympy.Symbol)), Symbol('x'))
+        
+        # Look for order
+        order = 1
+        for a in args[:-1]:
+            if a != var and isinstance(a, (sympy.Basic, int, float)):
+                order = a
+                break
+        
+        # Map to FractionalDerivative if needed
+        order_sym = sympy.sympify(order)
+        if not order_sym.is_Integer:
+            return FractionalDerivative(func, var, order_sym)
+            
+        return Derivative(func, var, int(order_sym), evaluate=False)
 
     def first_prime(self, args):
         return Derivative(args[0], Symbol('t'), 1, evaluate=False)
@@ -133,7 +146,14 @@ class LaTeXTransformer(Transformer):
         return Derivative(args[0], Symbol('t'), 2, evaluate=False)
 
     def nth_prime(self, args):
-        return Derivative(args[0], Symbol('t'), int(str(args[-1])), evaluate=False)
+        func = args[0]
+        order = args[-1]
+        
+        # order is an expr (since updated grammar)
+        if hasattr(order, 'is_Integer') and order.is_Integer:
+            return Derivative(func, Symbol('t'), int(order), evaluate=False)
+        
+        return FractionalDerivative(func, Symbol('t'), order)
 
     # ================================================================
     # PARTIAL DERIVATIVES
