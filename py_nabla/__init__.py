@@ -14,7 +14,7 @@ Quick start::
     print(f.evaluate(x=1.0))   # 2.5403...
 """
 
-__version__ = "1.0.2"
+__version__ = "1.1.0-alpha"
 __author__ = "Nabla Team"
 __email__ = "info@nabla-math.org"
 __license__ = "MIT"

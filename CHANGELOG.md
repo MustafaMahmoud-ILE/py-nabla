@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0-alpha] - 2026-04-19
+
+### Added
+- **Solver Engine**: Introduction of `Expression.dsolve()`, enabling the sophisticated resolution of Differential and Integral equations.
+- **Laplace Intelligence**: The core uses an automated Laplace transform engine to handle highly complex IDEs, mapping integral limits exactly to $Y(s)/s$.
+- **Advanced Constants Mapping**: The solver natively assesses mathematical degree and injects generic integration constants ($C_1, C_2...$) autonomously.
+- **Series Approximation Backup**: A built-in router forwards nonlinear logic directly to $N$-th term Power Series implementations (Taylor/Maclaurin).
+- **Newton’s Prime Notation**: The grammar now identifies $y', y''$, up to $y^{(n)}$ natively!
+- **Robust Exception Hierarchy**: Introduced `NablaSolveError` and `LaplaceTransformError`.
+
 ## [1.0.2] - 2026-04-19
 
 ### Security & Robustness
