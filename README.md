@@ -94,7 +94,7 @@ Beautiful bidirectional conversion with custom styles:
 
 ## 🤝 Contributing
 
-We welcome contributions from the mathematical and open-source communities! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions from the mathematical and open-source communities! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, and our [Testing Guide](TESTING.md) before submitting code.
 
 ## 📄 License
 
